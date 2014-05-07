@@ -97,6 +97,26 @@ module.exports.prototype = {
             delete manifest.type;
         }
 
+        // Update icons
+        var configIcons = config.getIcons('firefoxos');
+        var appRoot = util.isCordova(this.path);
+
+        if (configIcons && configIcons.length > 0) {
+            manifest.icons = manifest.icons || {};
+
+            configIcons.forEach(function(icon) {
+                var dest = path.join(this.path, 'www', icon.src);
+                var src = path.join(appRoot, 'res', icon.src);
+
+                if (!fs.existsSync(dest)) {
+                    events.emit('verbose', 'Copying icon from ' + src + ' to ' + dest);
+                    shell.cp('-f', src, dest);
+                }
+
+                manifest.icons[icon.height] = path.join('/', icon.src);
+            }, this);
+        }
+
         fs.writeFileSync(manifestPath, JSON.stringify(manifest, null, 4));
 
         return Q();
